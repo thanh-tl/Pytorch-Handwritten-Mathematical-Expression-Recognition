@@ -265,8 +265,10 @@ def my_train(target_length,attn_decoder1,
 
 encoder = densenet121()
 
-pthfile = r'densenet121-a639ec97.pth'
-pretrained_dict = torch.load(pthfile) 
+#pthfile = r'densenet121-a639ec97.pth'
+#pretrained_dict = torch.load(pthfile)
+pretrained_dict = torch.hub.load('pytorch/vision:v0.4.2', 'densenet121', pretrained=True)
+
 encoder_dict = encoder.state_dict()
 pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in encoder_dict}
 encoder_dict.update(pretrained_dict)
