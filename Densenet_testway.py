@@ -58,7 +58,7 @@ gpu = [0]
 worddicts = load_dict(dictionaries[0])
 worddicts_r = [None] * len(worddicts)
 for kk, vv in worddicts.items():
-        worddicts_r[vv] = kk
+    worddicts_r[vv] = kk
 
 test,test_label = dataIterator(valid_datasets[0],valid_datasets[1],worddicts,batch_size=1,batch_Imagesize=batch_Imagesize,maxlen=maxlen,maxImagesize=maxImagesize)
 
@@ -150,8 +150,8 @@ attn_decoder1 = torch.nn.DataParallel(attn_decoder1, device_ids=gpu)
 encoder = encoder.cuda()
 attn_decoder1 = attn_decoder1.cuda()
 
-encoder.load_state_dict(torch.load('model/encoder_lr0.00001_BN_te1_d05_SGD_bs8_mask_conv_bn_b.pkl'))
-attn_decoder1.load_state_dict(torch.load('model/attn_decoder_lr0.00001_BN_te1_d05_SGD_bs8_mask_conv_bn_b.pkl'))
+encoder.load_state_dict(torch.load('model/encoder_lr0.00001_GN_te1_d05_SGD_bs6_mask_conv_bn_b_xavier.pkl'))
+attn_decoder1.load_state_dict(torch.load('model/attn_decoder_lr0.00001_GN_te1_d05_SGD_bs6_mask_conv_bn_b_xavier.pkl'))
 
 total_dist = 0
 total_label = 0
@@ -223,11 +223,11 @@ for step_t, (x_t, y_t) in enumerate(test_loader):
     y_t = m(y_t)
     for i in range(maxlen):
         decoder_output, decoder_hidden_t, decoder_attention_t, attention_sum_t = attn_decoder1(decoder_input_t,
-                                                                                         decoder_hidden_t,
-                                                                                         output_highfeature_t,
-                                                                                         output_area_t,
-                                                                                         attention_sum_t,
-                                                                                         decoder_attention_t,dense_input,batch_size_t,h_mask_t,w_mask_t,gpu)
+                                                                                               decoder_hidden_t,
+                                                                                               output_highfeature_t,
+                                                                                               output_area_t,
+                                                                                               attention_sum_t,
+                                                                                               decoder_attention_t,dense_input,batch_size_t,h_mask_t,w_mask_t,gpu)
 
 
         topv,topi = torch.max(decoder_output,2)
@@ -283,7 +283,7 @@ for step_t, (x_t, y_t) in enumerate(test_loader):
         prediction_real = []
 
 
-  
+
     # dist, llen, hit, ins, dls = cmp_result(label, prediction)
     # wer_step = float(dist) / llen
     # print('the wer is %.5f' % (wer_step))
