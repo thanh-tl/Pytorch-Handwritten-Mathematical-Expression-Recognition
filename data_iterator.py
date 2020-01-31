@@ -4,16 +4,19 @@ Pytorch >= 0.4
 Written by Hongyu Wang in Beihang university
 '''
 import numpy
-import pickle as pkl
+# import pickle as pkl
 import sys
+from sklearn.externals import joblib
+
 import torch
 
 
 def dataIterator(feature_file,label_file,dictionary,batch_size,batch_Imagesize,maxlen,maxImagesize):
     
-    fp=open(feature_file,'rb')
-    features=pkl.load(fp)
-    fp.close()
+    # fp=open(feature_file,'rb')
+    #features=pkl.load(fp)
+    features = joblib.load(feature_file)
+    # fp.close()
 
     fp2=open(label_file,'r')
     labels=fp2.readlines()
