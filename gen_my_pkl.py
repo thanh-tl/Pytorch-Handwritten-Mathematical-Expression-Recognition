@@ -9,6 +9,7 @@ import pandas as pd
 import pickle as pkl
 import numpy
 from scipy.misc import imread, imresize, imsave
+from sklearn.externals import joblib
 
 print("GEN PKL TEST......");
 
@@ -33,7 +34,7 @@ while 1:
         im = imread(image_file)
         mat = numpy.zeros([channels, im.shape[0], im.shape[1]], dtype='uint8')
 
-        print("mat ", im.shape[0], im.shape[1])
+        #print("mat ", im.shape[0], im.shape[1])
         for channel in range(channels):
             image_file = image_path + key+ '.bmp'
             im = imread(image_file)
@@ -45,7 +46,9 @@ while 1:
 
 print('load images done. sentence number ',sentNum)
 
-pkl.dump(features,oupFp_feature, protocol=4)
+#pkl.dump(features,oupFp_feature, protocol=4)
+joblib.dump(features, outFile)
+
 print('save file done')
 oupFp_feature.close()
 
@@ -82,7 +85,9 @@ while 1:
 
 print('load images done. sentence number ',sentNum)
 
-pkl.dump(features,oupFp_feature, protocol=4)
+#pkl.dump(features,oupFp_feature, protocol=4)
+joblib.dump(features, outFile)
+
 print('save file done')
 oupFp_feature.close()
 
