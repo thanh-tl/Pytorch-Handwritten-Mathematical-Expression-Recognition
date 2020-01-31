@@ -51,7 +51,7 @@ oupFp_feature.close()
 
 
 print("GEN PKL TRAIN......");
-image_path='./data/csv/images/'
+image_path='./data/images/'
 outFile='./data/csv/offline-train.pkl'
 oupFp_feature=open(outFile,'wb')
 
