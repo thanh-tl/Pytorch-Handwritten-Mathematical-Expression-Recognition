@@ -45,7 +45,7 @@ while 1:
 
 print('load images done. sentence number ',sentNum)
 
-pkl.dump(features,oupFp_feature)
+pkl.dump(features,oupFp_feature, protocol=4)
 print('save file done')
 oupFp_feature.close()
 
@@ -82,7 +82,7 @@ while 1:
 
 print('load images done. sentence number ',sentNum)
 
-pkl.dump(features,oupFp_feature)
+pkl.dump(features,oupFp_feature, protocol=4)
 print('save file done')
 oupFp_feature.close()
 
