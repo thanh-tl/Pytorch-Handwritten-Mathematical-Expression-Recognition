@@ -3,6 +3,8 @@ Python 3.6
 Pytorch >= 0.4
 Written by Hongyu Wang in Beihang university
 '''
+import shutil
+
 import torch
 import math
 import torch.nn as nn
@@ -15,8 +17,8 @@ from Densenet_torchvision import densenet121
 from Attention_RNN import AttnDecoderRNN
 #from Resnet101 import resnet101
 import random
-import matplotlib.pyplot as plt
 from PIL import Image
+from sklearn.externals import joblib
 
 
 # compute the wer loss
@@ -275,7 +277,7 @@ pretrained_dict = {k: v for k, v in pretrained_dict.items() if k in encoder_dict
 encoder_dict.update(pretrained_dict)
 encoder.load_state_dict(encoder_dict)
 
-attn_decoder1 = AttnDecoderRNN(hidden_size,112,dropout_p=0.5)
+attn_decoder1 = AttnDecoderRNN(hidden_size,256,dropout_p=0.5)
 
 encoder=encoder.cuda()
 attn_decoder1 = attn_decoder1.cuda()
@@ -386,6 +388,10 @@ for epoch in range(200):
 
     encoder.eval()
     attn_decoder1.eval()
+
+    print("free mem")
+    torch.cuda.empty_cache()
+
     print('Now, begin testing!!')
 
     for step_t, (x_t, y_t) in enumerate(test_loader):
@@ -531,6 +537,10 @@ for epoch in range(200):
         flag = 0
 
 
+def save_checkpoint(state, is_best, filename='./checkpoint/checkpoint.pth.tar'):
+    torch.save(state, filename)
+    if is_best:
+        shutil.copyfile(filename, './checkpoint/model_best.pth.tar')
 
 
 
