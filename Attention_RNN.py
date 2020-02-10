@@ -54,7 +54,10 @@ class AttnDecoderRNN(nn.Module):
 
         et_mask = torch.zeros(batch_gpu,dense_input,bb)
 
-        print(et_mask.device, " = et_mask.device")
+        if torch.cuda.is_available():
+            et_mask = et_mask.cuda()
+
+        # print(et_mask.device, " = et_mask.device")
 
         if torch.cuda.is_available():
             et_mask = et_mask.cuda()
