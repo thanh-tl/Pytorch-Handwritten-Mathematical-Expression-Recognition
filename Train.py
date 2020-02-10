@@ -19,7 +19,7 @@ from Attention_RNN import AttnDecoderRNN
 import random
 from PIL import Image
 from sklearn.externals import joblib
-from torch.optim.lr_scheduler import StepLR;
+from torch.optim.lr_scheduler import ReduceLROnPlateau;
 
 
 # compute the wer loss
@@ -311,8 +311,8 @@ decoder_optimizer1 = torch.optim.SGD(attn_decoder1.parameters(), lr=lr_rate,mome
 # decoder_optimizer1.load_state_dict(torch.load('model/decoder_optimizer1_lr0.00001_BN_te1_d05_SGD_bs8_mask_conv_bn_b.pkl'))
 
 
-scheduler_encode = StepLR(encoder_optimizer1, step_size=20, gamma=0.1)
-scheduler_decode = StepLR(decoder_optimizer1, step_size=20, gamma=0.1)
+scheduler_encode = ReduceLROnPlateau(encoder_optimizer1, 'min', patience=2)
+scheduler_decode = ReduceLROnPlateau(decoder_optimizer1, 'min', patience=2)
 
 for epoch in range(200):
 
@@ -389,6 +389,10 @@ for epoch in range(200):
 
     loss_all_out = whole_loss / len_train
     print("epoch is %d, the whole loss is %f" % (epoch, loss_all_out))
+
+    # tach rieng 2 lost nay
+    scheduler_decode.step(loss_all_out)
+    scheduler_encode.step(loss_all_out)
     # with open("training_data/whole_loss_%.5f_pre_GN_te05_d02_all.txt" % (lr_rate), "a") as f:
     #     f.write("%s\n" % (str(loss_all_out)))
 
