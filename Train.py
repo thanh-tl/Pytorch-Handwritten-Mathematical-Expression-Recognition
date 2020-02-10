@@ -19,6 +19,7 @@ from Attention_RNN import AttnDecoderRNN
 import random
 from PIL import Image
 from sklearn.externals import joblib
+from torch.optim.lr_scheduler import StepLR;
 
 
 # compute the wer loss
@@ -65,7 +66,7 @@ teacher_forcing_ratio = 1
 # change the gpu id 
 gpu = [0]
 # learning rate
-lr_rate = 0.0001
+lr_rate = 0.000001
 # flag to remember when to change the learning rate
 flag = 0
 # exprate
@@ -290,8 +291,12 @@ def imresize(im,sz):
 
 
 criterion = nn.NLLLoss()
-# encoder.load_state_dict(torch.load('model/encoder_lr0.00001_BN_te1_d05_SGD_bs8_mask_conv_bn_b.pkl'))
-# attn_decoder1.load_state_dict(torch.load('model/attn_decoder_lr0.00001_BN_te1_d05_SGD_bs8_mask_conv_bn_b.pkl'))
+
+# loading from pre train
+
+encoder.load_state_dict(torch.load('model_69/encoder_lr0.00000_GN_te1_d05_SGD_bs6_mask_conv_bn_b_xavier.pkl'))
+attn_decoder1.load_state_dict(torch.load('model_69/attn_decoder_lr0.00000_GN_te1_d05_SGD_bs6_mask_conv_bn_b_xavier.pkl'))
+
 decoder_input_init = torch.LongTensor([111]*batch_size).cuda()
 decoder_hidden_init = torch.randn(batch_size, 1, hidden_size).cuda()
 nn.init.xavier_uniform_(decoder_hidden_init)
@@ -299,9 +304,17 @@ nn.init.xavier_uniform_(decoder_hidden_init)
 # encoder_optimizer1 = torch.optim.Adam(encoder.parameters(), lr=lr_rate)
 # decoder_optimizer1 = torch.optim.Adam(attn_decoder1.parameters(), lr=lr_rate)
 
+encoder_optimizer1 = torch.optim.SGD(encoder.parameters(), lr=lr_rate,momentum=0.9)
+decoder_optimizer1 = torch.optim.SGD(attn_decoder1.parameters(), lr=lr_rate,momentum=0.9)
+
+# encoder_optimizer1.load_state_dict(torch.load('model/encoder_optimizer1_lr0.00001_BN_te1_d05_SGD_bs8_mask_conv_bn_b.pkl'))
+# decoder_optimizer1.load_state_dict(torch.load('model/decoder_optimizer1_lr0.00001_BN_te1_d05_SGD_bs8_mask_conv_bn_b.pkl'))
+
+
+scheduler_encode = StepLR(encoder_optimizer1, step_size=20, gamma=0.1)
+scheduler_decode = StepLR(decoder_optimizer1, step_size=20, gamma=0.1)
+
 for epoch in range(200):
-    encoder_optimizer1 = torch.optim.SGD(encoder.parameters(), lr=lr_rate,momentum=0.9)
-    decoder_optimizer1 = torch.optim.SGD(attn_decoder1.parameters(), lr=lr_rate,momentum=0.9)
 
     # # if using SGD optimizer
     # if epoch+1 == 50:
@@ -369,7 +382,7 @@ for epoch in range(200):
             pre = ((step+1)/len_train)*100*batch_size
             whole_loss += running_loss
             running_loss = running_loss/(batch_size*20)
-            print('epoch is %d, lr rate is %.5f, te is %.3f, batch_size is %d, loading for %.3f%%, running_loss is %f' %(epoch,lr_rate,teacher_forcing_ratio, batch_size,pre,running_loss))
+            print('epoch is %d, lr rate is %.8f, te is %.3f, batch_size is %d, loading for %.3f%%, running_loss is %f' %(epoch,lr_rate,teacher_forcing_ratio, batch_size,pre,running_loss))
             # with open("training_data/running_loss_%.5f_pre_GN_te05_d02_all.txt" %(lr_rate),"a") as f:
             #     f.write("%s\n"%(str(running_loss)))
             running_loss = 0
@@ -522,9 +535,12 @@ for epoch in range(200):
         exprate = sacc
         print(exprate)
         print("saving the model....")
-        print('encoder_lr%.5f_GN_te1_d05_SGD_bs6_mask_conv_bn_b_xavier.pkl' %(lr_rate))
+        print('encoder_lr%.8f_GN_te1_d05_SGD_bs6_mask_conv_bn_b_xavier.pkl' %(lr_rate))
         torch.save(encoder.state_dict(), 'model/encoder_lr%.5f_GN_te1_d05_SGD_bs6_mask_conv_bn_b_xavier.pkl'%(lr_rate))
-        torch.save(attn_decoder1.state_dict(), 'model/attn_decoder_lr%.5f_GN_te1_d05_SGD_bs6_mask_conv_bn_b_xavier.pkl'%(lr_rate))
+        torch.save(attn_decoder1.state_dict(), 'model/attn_decoder_lr%.8f_GN_te1_d05_SGD_bs6_mask_conv_bn_b_xavier.pkl'%(lr_rate))
+
+        torch.save(encoder_optimizer1.state_dict(), 'model/encoder_optimizer1_lr%.8f_GN_te1_d05_SGD_bs6_mask_conv_bn_b_xavier.pkl'%(lr_rate))
+        torch.save(encoder_optimizer1.state_dict(), 'model/decoder_optimizer1_lr%.8f_GN_te1_d05_SGD_bs6_mask_conv_bn_b_xavier.pkl'%(lr_rate))
         print("done")
         flag = 0
     else:
