@@ -45,8 +45,19 @@ class AttnDecoderRNN(nn.Module):
     def forward(self, input_a, hidden, encoder_outputs,bb,attention_sum,decoder_attention,dense_input,batch_size,h_mask,w_mask,gpu):
 
         # batch_gpu must be an int object
-        batch_gpu = int(batch_size/len(gpu))
-        et_mask = torch.zeros(batch_gpu,dense_input,bb).cuda()
+        if torch.cuda.is_available():
+            len_gpu = len(gpu)
+        else:
+            len_gpu = 1
+
+        batch_gpu = int(batch_size/len_gpu)
+
+        et_mask = torch.zeros(batch_gpu,dense_input,bb)
+
+        print(et_mask.device, " = et_mask.device")
+
+        if torch.cuda.is_available():
+            et_mask = et_mask.cuda()
 
         if et_mask.device == torch.device('cuda:0'):
             for i in range(batch_gpu):
@@ -63,6 +74,10 @@ class AttnDecoderRNN(nn.Module):
         if et_mask.device == torch.device('cuda:3'):
             for i in range(batch_gpu):
                 et_mask[i][:h_mask[i+3*batch_gpu],:w_mask[i+3*batch_gpu]]=1
+
+        if et_mask.device == torch.device('cpu'):
+            for i in range(batch_gpu):
+                et_mask[i][:h_mask[i],:w_mask[i]]=1
 
         et_mask_4 = et_mask.unsqueeze(1)
 
@@ -111,7 +126,8 @@ class AttnDecoderRNN(nn.Module):
 
         # et_div_all is attention alpha
         et_div_all = torch.zeros(batch_gpu,1,dense_input,bb)
-        et_div_all = et_div_all.cuda()
+        if torch.cuda.is_available():
+            et_div_all = et_div_all.cuda()
 
         et_exp = torch.exp(et)
         et_exp = et_exp*et_mask
@@ -146,4 +162,7 @@ class AttnDecoderRNN(nn.Module):
 
     def initHidden(self,batch_size):
         result = Variable(torch.randn(batch_size, 1, self.hidden_size))
-        return result.cuda()
+        if torch.cuda.is_available():
+            return result.cuda()
+        else:
+            return result

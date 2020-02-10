@@ -34,6 +34,7 @@ def choosepic():
     global Flag
     path_ = askopenfilename()
     path.set(path_)
+    print("path", path_)
     global img_open
     img_open = Image.open(e1.get()).convert('L')
     img = ImageTk.PhotoImage(img_open)
@@ -157,7 +158,8 @@ def saveClick():
 root = Tk()
 root.geometry('1600x900')
 root.title('HMER Tool V2.0')
-Flag = True
+Flag = False
+img_open = Image.open("/Users/thanhtruongle/SourceCode/RD/Pytorch-Handwritten-Mathematical-Expression-Recognition/data/images/latex_36759.bmp").convert('L')
 
 menubar = tkinter.Menu(root)
 filemenu = tkinter.Menu(menubar, tearoff=0)
@@ -210,6 +212,10 @@ l2 = Label(root)
 l2.place(relx=0.55, y=250)
 img_trans_show = Label(root)
 img_trans_show.place(x=550, y=150)
+
+img = ImageTk.PhotoImage(img_open)
+l1.config(image=img)
+
 root.config(menu=menubar)
 
 root.mainloop()
