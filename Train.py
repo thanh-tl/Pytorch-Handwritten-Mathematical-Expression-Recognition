@@ -3,8 +3,6 @@ Python 3.6
 Pytorch >= 0.4
 Written by Hongyu Wang in Beihang university
 '''
-import shutil
-
 import torch
 import math
 import torch.nn as nn
@@ -17,9 +15,8 @@ from Densenet_torchvision import densenet121
 from Attention_RNN import AttnDecoderRNN
 #from Resnet101 import resnet101
 import random
+import matplotlib.pyplot as plt
 from PIL import Image
-from sklearn.externals import joblib
-from torch.optim.lr_scheduler import ReduceLROnPlateau;
 
 
 # compute the wer loss
@@ -61,9 +58,9 @@ maxlen=256
 maxImagesize= 100000
 # hidden_size in RNN
 hidden_size = 256
-# teacher_forcing_ratio 
+# teacher_forcing_ratio
 teacher_forcing_ratio = 1
-# change the gpu id 
+# change the gpu id
 gpu = [0]
 # learning rate
 lr_rate = 0.000001
@@ -80,15 +77,15 @@ for kk, vv in worddicts.items():
 
 #load train data and test data
 train,train_label = dataIterator(
-                                    datasets[0], datasets[1],worddicts,batch_size=1,
-                                    batch_Imagesize=batch_Imagesize,maxlen=maxlen,maxImagesize=maxImagesize
-                                 )
+    datasets[0], datasets[1],worddicts,batch_size=1,
+    batch_Imagesize=batch_Imagesize,maxlen=maxlen,maxImagesize=maxImagesize
+)
 len_train = len(train)
 
 test,test_label = dataIterator(
-                                    valid_datasets[0],valid_datasets[1],worddicts,batch_size=1,
-                                    batch_Imagesize=batch_Imagesize,maxlen=maxlen,maxImagesize=maxImagesize
-                                )
+    valid_datasets[0],valid_datasets[1],worddicts,batch_size=1,
+    batch_Imagesize=batch_Imagesize,maxlen=maxlen,maxImagesize=maxImagesize
+)
 len_test = len(test)
 
 
@@ -114,9 +111,9 @@ class custom_dset(data.Dataset):
 off_image_train = custom_dset(train,train_label,batch_size)
 off_image_test = custom_dset(test,test_label,batch_size)
 
-# collate_fn is writting for padding imgs in batch. 
+# collate_fn is writting for padding imgs in batch.
 # As images in my dataset are different size, so the padding is necessary.
-# Padding images to the max image size in a mini-batch and cat a mask. 
+# Padding images to the max image size in a mini-batch and cat a mask.
 def collate_fn(batch):
     batch.sort(key=lambda x: len(x[1]), reverse=True)
     img, label = zip(*batch)
@@ -171,7 +168,7 @@ train_loader = torch.utils.data.DataLoader(
     shuffle = True,
     collate_fn = collate_fn,
     num_workers=2,
-    )
+)
 test_loader = torch.utils.data.DataLoader(
     dataset = off_image_test,
     batch_size = batch_size_t,
@@ -202,8 +199,8 @@ def my_train(target_length,attn_decoder1,
                                                                                              attention_sum,
                                                                                              decoder_attention,
                                                                                              dense_input,batch_size,h_mask,w_mask,gpu)
-            
-            
+
+
             #print(decoder_output.size()) (batch,1,112)
             y = y.unsqueeze(0)
             for i in range(batch_size):
@@ -234,9 +231,9 @@ def my_train(target_length,attn_decoder1,
         my_num = 0
         for di in range(target_length):
             decoder_output, decoder_hidden, decoder_attention,attention_sum= attn_decoder1(decoder_input, decoder_hidden,
-                                                                                output_highfeature, output_area,
-                                                                                attention_sum,decoder_attention,dense_input,batch_size,
-                                                                                h_mask,w_mask,gpu)
+                                                                                           output_highfeature, output_area,
+                                                                                           attention_sum,decoder_attention,dense_input,batch_size,
+                                                                                           h_mask,w_mask,gpu)
             #print(decoder_output.size()) 1*10*112
             #print(y.size())  1*37
             #topi (b,1)
@@ -270,6 +267,7 @@ encoder = densenet121()
 
 pthfile = r'densenet121-a639ec97.pth'
 pretrained_dict = torch.load(pthfile)
+
 #pretrained_dict = torch.hub.load('pytorch/vision:v0.4.2', 'densenet121', pretrained=True)
 #pretrained_dict.eval()
 
@@ -304,17 +302,9 @@ nn.init.xavier_uniform_(decoder_hidden_init)
 # encoder_optimizer1 = torch.optim.Adam(encoder.parameters(), lr=lr_rate)
 # decoder_optimizer1 = torch.optim.Adam(attn_decoder1.parameters(), lr=lr_rate)
 
-encoder_optimizer1 = torch.optim.SGD(encoder.parameters(), lr=lr_rate,momentum=0.9)
-decoder_optimizer1 = torch.optim.SGD(attn_decoder1.parameters(), lr=lr_rate,momentum=0.9)
-
-# encoder_optimizer1.load_state_dict(torch.load('model/encoder_optimizer1_lr0.00001_BN_te1_d05_SGD_bs8_mask_conv_bn_b.pkl'))
-# decoder_optimizer1.load_state_dict(torch.load('model/decoder_optimizer1_lr0.00001_BN_te1_d05_SGD_bs8_mask_conv_bn_b.pkl'))
-
-
-scheduler_encode = ReduceLROnPlateau(encoder_optimizer1, 'min', patience=2)
-scheduler_decode = ReduceLROnPlateau(decoder_optimizer1, 'min', patience=2)
-
 for epoch in range(200):
+    encoder_optimizer1 = torch.optim.SGD(encoder.parameters(), lr=lr_rate,momentum=0.9)
+    decoder_optimizer1 = torch.optim.SGD(attn_decoder1.parameters(), lr=lr_rate,momentum=0.9)
 
     # # if using SGD optimizer
     # if epoch+1 == 50:
@@ -374,10 +364,10 @@ for epoch in range(200):
         decoder_attention_init = torch.zeros(batch_size,1,dense_input,output_area).cuda()
 
         running_loss += my_train(target_length,attn_decoder1,output_highfeature,
-                                output_area,y,criterion,encoder_optimizer1,decoder_optimizer1,x_mean,dense_input,h_mask,w_mask,gpu,
-                                decoder_input_init,decoder_hidden_init,attention_sum_init,decoder_attention_init)
+                                 output_area,y,criterion,encoder_optimizer1,decoder_optimizer1,x_mean,dense_input,h_mask,w_mask,gpu,
+                                 decoder_input_init,decoder_hidden_init,attention_sum_init,decoder_attention_init)
 
-        
+
         if step % 20 == 19:
             pre = ((step+1)/len_train)*100*batch_size
             whole_loss += running_loss
@@ -389,10 +379,6 @@ for epoch in range(200):
 
     loss_all_out = whole_loss / len_train
     print("epoch is %d, the whole loss is %f" % (epoch, loss_all_out))
-
-    # tach rieng 2 lost nay
-    scheduler_decode.step(loss_all_out)
-    scheduler_encode.step(loss_all_out)
     # with open("training_data/whole_loss_%.5f_pre_GN_te05_d02_all.txt" % (lr_rate), "a") as f:
     #     f.write("%s\n" % (str(loss_all_out)))
 
@@ -405,10 +391,6 @@ for epoch in range(200):
 
     encoder.eval()
     attn_decoder1.eval()
-
-    print("free mem")
-    torch.cuda.empty_cache()
-
     print('Now, begin testing!!')
 
     for step_t, (x_t, y_t) in enumerate(test_loader):
@@ -467,11 +449,11 @@ for epoch in range(200):
         y_t = m(y_t)
         for i in range(maxlen):
             decoder_output, decoder_hidden_t, decoder_attention_t, attention_sum_t = attn_decoder1(decoder_input_t,
-                                                                                             decoder_hidden_t,
-                                                                                             output_highfeature_t,
-                                                                                             output_area_t,
-                                                                                             attention_sum_t,
-                                                                                             decoder_attention_t,dense_input,batch_size_t,h_mask_t,w_mask_t,gpu)
+                                                                                                   decoder_hidden_t,
+                                                                                                   output_highfeature_t,
+                                                                                                   output_area_t,
+                                                                                                   attention_sum_t,
+                                                                                                   decoder_attention_t,dense_input,batch_size_t,h_mask_t,w_mask_t,gpu)
 
             ### you can see the attention when testing
 
@@ -487,7 +469,7 @@ for epoch in range(200):
             #     show_x = x_real+show
             #     plt.imshow(show_x, interpolation='nearest', cmap='gray_r')
             #     plt.show()
-            
+
             topv,topi = torch.max(decoder_output,2)
             # if torch.sum(y_t[0,:,i])==0:
             #     y_t = y_t.squeeze(0)
@@ -540,11 +522,8 @@ for epoch in range(200):
         print(exprate)
         print("saving the model....")
         print('encoder_lr%.8f_GN_te1_d05_SGD_bs6_mask_conv_bn_b_xavier.pkl' %(lr_rate))
-        torch.save(encoder.state_dict(), 'model/encoder_lr%.5f_GN_te1_d05_SGD_bs6_mask_conv_bn_b_xavier.pkl'%(lr_rate))
+        torch.save(encoder.state_dict(), 'model/encoder_lr%.8f_GN_te1_d05_SGD_bs6_mask_conv_bn_b_xavier.pkl'%(lr_rate))
         torch.save(attn_decoder1.state_dict(), 'model/attn_decoder_lr%.8f_GN_te1_d05_SGD_bs6_mask_conv_bn_b_xavier.pkl'%(lr_rate))
-
-        torch.save(encoder_optimizer1.state_dict(), 'model/encoder_optimizer1_lr%.8f_GN_te1_d05_SGD_bs6_mask_conv_bn_b_xavier.pkl'%(lr_rate))
-        torch.save(encoder_optimizer1.state_dict(), 'model/decoder_optimizer1_lr%.8f_GN_te1_d05_SGD_bs6_mask_conv_bn_b_xavier.pkl'%(lr_rate))
         print("done")
         flag = 0
     else:
@@ -552,15 +531,11 @@ for epoch in range(200):
         print('the best is %f' % (exprate))
         print('the loss is bigger than before,so do not save the model')
 
-    if flag == 10:
+    if flag == 2:
         lr_rate = lr_rate*0.1
         flag = 0
 
 
-def save_checkpoint(state, is_best, filename='./checkpoint/checkpoint.pth.tar'):
-    torch.save(state, filename)
-    if is_best:
-        shutil.copyfile(filename, './checkpoint/model_best.pth.tar')
 
 
 
